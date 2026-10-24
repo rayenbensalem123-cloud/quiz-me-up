@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duel Quiz Football — Prototype</title>
+<style>
+  :root {
+    --fond: #0e1220;
+    --carte: #1a2038;
+    --carte2: #222a4a;
+    --accent: #22d3a5;
+    --accent2: #f7b32b;
+    --rouge: #ef5b6c;
+    --texte: #eef1fb;
+    --texte2: #9aa4c4;
+    --border: #2e3760;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1c2450 0%, var(--fond) 60%);
+    color: var(--texte);
+    min-height: 100vh;
+    display: flex; justify-content: center; padding: 16px;
+  }
+  #app { width: 100%; max-width: 480px; }
+  .ecran { display: none; animation: apparait .25s ease; }
+  .ecran.actif { display: block; }
+  @keyframes apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+  .carte { background: var(--carte); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; }
+  h1 { font-size: 1.5rem; text-align: center; margin-bottom: 4px; }
+  h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  .sous-titre { color: var(--texte2); text-align: center; font-size: .9rem; margin-bottom: 18px; }
+
+  input[type=text] {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--carte2); color: var(--texte); font-size: 1rem; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--accent); }
+
+  .grille-equipes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .equipe {
+    background: var(--carte2); border: 2px solid var(--border); border-radius: 12px;
+    padding: 10px 4px; text-align: center; cursor: pointer; font-size: .8rem; color: var(--texte2);
+    transition: all .15s;
+  }
+  .equipe .drapeau { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+  .equipe:hover { border-color: var(--accent2); }
+  .equipe.choisie { border-color: var(--accent); color: var(--texte); background: #1c3a33; }
+
+  .btn {
+    display: block; width: 100%; padding: 14px; margin-top: 14px; border: none; border-radius: 12px;
+    background: var(--accent); color: #062b22; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    transition: transform .1s, opacity .15s;
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn:not(:disabled):active { transform: scale(.98); }
+  .btn.secondaire { background: var(--carte2); color: var(--texte); border: 1px solid var(--border); }
+  .btn.terre { background: var(--accent2); color: #3d2a00; }
+
+  .barre-haut { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; color: var(--texte2); font-size: .9rem; }
+  .chrono { font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; }
+
+  .duel-joueurs { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .joueur { flex: 1; text-align: center; }
+  .joueur .avatar { font-size: 1.8rem; }
+  .joueur .nom { font-size: .85rem; color: var(--texte2); }
+  .joueur.points-actif .nom { color: var(--accent); }
+  .vs { color: var(--texte2); font-weight: 700; }
+  .score { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; min-height: 60px; }
+
+  .reponse {
+    display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px;
+    background: var(--carte2); color: var(--texte); border: 2px solid var(--border); border-radius: 12px;
+    font-size: .95rem; cursor: pointer; transition: all .15s;
+  }
+  .reponse:hover:not(:disabled) { border-color: var(--accent2); }
+  .reponse:disabled { cursor: default; opacity: .85; }
+  .reponse.bonne { border-color: var(--accent); background: #14352b; }
+  .reponse.mauvaise { border-color: var(--rouge); background: #3a1d26; }
+  .reponse.masquee { opacity: .45; }
+
+  .ruisseau { height: 6px; background: var(--border); border-radius: 3px; margin: 6px 0 16px; overflow: hidden; }
+  .ruisseau > div { height: 100%; background: var(--accent2); width: 0%; transition: width .3s linear; }
+
+  .resultat-titre { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 10px 0 4px; }
+  .gagne { color: var(--accent); }
+  .perdu { color: var(--rouge); }
+  .egalite { color: var(--accent2); }
+  .resultat-score { text-align: center; font-size: 1.2rem; margin-bottom: 12px; }
+  .points-equipe { text-align: center; color: var(--texte2); font-size: .9rem; margin-bottom: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { padding: 9px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--texte2); font-weight: 600; font-size: .8rem; }
+  .rang-moi { color: var(--accent); font-weight: 700; }
+  td.points { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .badge { display: inline-block; background: var(--carte2); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: .75rem; color: var(--texte2); }
+  .note { color: var(--texte2); font-size: .8rem; }
+
+  .notification {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    background: var(--carte2); border: 1px solid var(--accent); color: var(--texte);
+    padding: 10px 18px; border-radius: 999px; font-size: .9rem;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .notification.visible { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ÉCRAN ACCUEIL -->
+  <div class="ecran actif" id="ecran-accueil">
+    <div class="carte">
+      <h1>⚽ Duel Quiz Football</h1>
+      <p class="sous-titre">10 questions · 12 secondes chacune · ta victoire fait grimper ton équipe au classement hebdomadaire</p>
+      <input type="text" id="pseudo" placeholder="Ton pseudo" maxlength="14" autocomplete="off">
+      <h2 style="margin-top:18px">Choisis ton équipe</h2>
+      <div class="grille-equipes" id="grille-equipes"></div>
+      <button class="btn" id="btn-jouer" disabled>Jouer le duel</button>
+      <button class="btn secondaire" id="btn-classement-accueil">Voir le classement des équipes</button>
+      <p class="note" style="margin-top:12px">Prototype : ton adversaire est un « robot » (comme un fantôme jouant une vraie partie), le but étant de tester le concept sans attendre d'autres joueurs connectés.</p>
+    </div>
+  </div>
+
+  <!-- ÉCRAN DUEL -->
+  <div class="ecran" id="ecran-duel">
+    <div class="carte">
+      <div class="barre-haut">
+        <span id="duel-progression">Question 1/10</span>
+        <span class="chrono" id="chrono">12,0 s</span>
+      </div>
+      <div class="duel-joueurs">
+        <div class="joueur" id="joueur-moi">
+          <div class="avatar">🧑</div>
+          <div class="nom" id="moi-nom">—</div>
+          <div class="score" id="moi-score">0</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="joueur" id="joueur-bot">
+          <div class="avatar">🤖</div>
+          <div class="nom" id="bot-nom">Robot</div>
+          <div class="score" id="bot-score">0</div>
+        </div>
+      </div>
+      <div class="question" id="question-texte"></div>
+      <div id="reponses"></div>
+      <div class="ruisseau"><div id="ruisseau-temps"></div></div>
+      <div class="badge" id="duel-categorie">Général</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN RÉSULTAT -->
+  <div class="ecran" id="ecran-resultat">
+    <div class="carte">
+      <p class="resultat-titre" id="resultat-titre">—</p>
+      <p class="resultat-score" id="resultat-score">—</p>
+      <p class="points-equipe" id="points-equipe">—</p>
+      <button class="btn terre" id="btn-revanche">Revanche ⚡</button>
+      <button class="btn secondaire" id="btn-classement-resultat">Classement des équipes</button>
+      <button class="btn secondaire" id="btn-accueil-resultat">Retour à l'accueil</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN CLASSEMENT -->
+  <div class="ecran" id="ecran-classement">
+    <div class="carte">
+      <h2>🏆 Classement hebdomadaire des équipes</h2>
+      <p class="note" style="margin-bottom:12px">Chaque victoire rapporte 150 points à ton équipe, un match nul en rapporte 60. Les autres équipes progressent aussi ( simulation ).</p>
+      <table>
+        <thead><tr><th>#</th><th>Équipe</th><th style="text-align:right">Points</th></tr></thead>
+        <tbody id="classement-corps"></tbody>
+      </table>
+      <button class="btn secondaire" id="btn-retour-accueil">Retour</button>
+      <p class="note" style="margin-top:10px">Le classement réel serait calculé côté serveur pour empêcher la triche — ici tout reste sur ton téléphone, c'est un prototype.</p>
+    </div>
+  </div>
+
+</div>
+<div class="notification" id="notification"></div>
+
+<script>
+"use strict";
+
+/* ---------- Données ---------- */
+const EQUIPES = [
+  { nom: "Maroc",     drapeau: "🇲🇦" },
+  { nom: "Algérie",   drapeau: "🇩🇿" },
+  { nom: "Tunisie",   drapeau: "🇹🇳" },
+  { nom: "Égypte",    drapeau: "🇪🇬" },
+  { nom: "Sénégal",   drapeau: "🇸🇳" },
+  { nom: "France",    drapeau: "🇫🇷" },
+  { nom: "Brésil",    drapeau: "🇧🇷" },
+  { nom: "Argentine", drapeau: "🇦🇷" },
+];
+
+const QUESTIONS = [
+  { q: "Quel pays a remporté la Coupe du monde 2022 ?", c: ["Argentine", "France", "Brésil", "Croatie"], b: 0, cat: "Coupes du monde" },
+  { q: "Quelle nation a remporté la CAN 2023 (jouée en 2024) ?", c: ["Côte d'Ivoire", "Nigeria", "Sénégal", "Maroc"], b: 0, cat: "CAN" },
+  { q: "Quel club a gagné la Ligue des champions le plus de fois ?", c: ["Real Madrid", "AC Milan", "Bayern Munich", "Liverpool"], b: 0, cat: "Clubs" },
+  { q: "Combien de Ballons d'Or Lionel Messi a-t-il gagnés ?", c: ["8", "6", "7", "5"], b: 0, cat: "Ballons d'Or" },
+  { q: "Quel pays a organisé la Coupe du monde 2010 ?", c: ["Afrique du Sud", "Brésil", "Allemagne", "Qatar"], b: 0, cat: "Coupes du monde" },
+  { q: "Combien de joueurs par équipe sur le terrain au football ?", c: ["11", "10", "12", "9"], b: 0, cat: "Règles" },
+  { q: "Quel pays a gagné la toute première Coupe du monde en 1930 ?", c: ["Uruguay", "Brésil", "Italie", "Argentine"], b: 0, cat: "Coupes du monde" },
+  { q: "Quel club joue ses matchs au Parc des Princes ?", c: ["Paris Saint-Germain", "Olympique lyonnais", "AS Monaco", "Marseille"], b: 0, cat: "Clubs" },
+  { q: "Combien de temps dure un match hors prolongations ?", c: ["90 minutes", "80 minutes", "100 minutes", "70 minutes"], b: 0, cat: "Règles" },
+  { q: "Quelle couleur est le carton le plus sévère au football ?", c: ["Rouge", "Jaune", "Orange", "Bleu"], b: 0, cat: "Règles" },
+  { q: "Quel pays a organisé la CAN 2025 ?", c: ["Maroc", "Égypte", "Algérie", "Sénégal"], b: 0, cat: "CAN" },
+  { q: "Quels pays accueillent la Coupe du monde 2026 ?", c: ["États-Unis, Canada et Mexique", "Espagne et Portugal", "Arabie saoudite", "Angleterre"], b: 0, cat: "Coupes du monde" },
+  { q: "Quelle équipe a gagné le championnat d'Espagne 2023-2024 ?", c: ["Real Madrid", "Barcelone", "Atlético Madrid", "Girona"], b: 0, cat: "Clubs" },
+  { q: "Qui a marqué de la main contre l'Angleterre en 1986 ?", c: ["Diego Maradona", "Pelé", "Zinédine Zidane", "Gabriel Batistuta"], b: 0, cat: "Légendes" },
+];
+
+const POINTS_VICTOIRE = 150;
+const POINTS_NUL = 60;
+const POINTS_DEFAITE = 20;
+const DUREE_QUESTION = 12; // secondes
+const NB_QUESTIONS = 10;
+
+/* ---------- Stockage local ---------- */
+function chargerEtat() {
+  let etat;
+  try { etat = JSON.parse(localStorage.getItem("duel-quiz-foot")); } catch (e) { etat = null; }
+  if (!etat || !etat.classement) {
+    etat = {
+      pseudo: null, equipe: null,
+      classement: EQUIPES.map(e => ({ nom: e.nom, points: 800 + Math.floor(Math.random() * 1400) })),
+      historique: [],
+    };
+  }
+  return etat;
+}
+let etat = chargerEtat();
+function sauverEtat() { localStorage.setItem("duel-quiz-foot", JSON.stringify(etat)); }
+
+/* ---------- Outils ---------- */
+const $ = id => document.getElementById(id);
+const melanger = tableau => {
+  const t = [...tableau];
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [t[i], t[j]] = [t[j], t[i]];
+  }
+  return t;
+};
+
+let notifMinuteur = null;
+function notifier(texte) {
+  const n = $("notification");
+  n.textContent = texte;
+  n.classList.add("visible");
+  clearTimeout(notifMinuteur);
+  notifMinuteur = setTimeout(() => n.classList.remove("visible"), 1800);
+}
+
+function montrerEcran(nom) {
+  document.querySelectorAll(".ecran").forEach(e => e.classList.remove("actif"));
+  $(nom).classList.add("actif");
+}
+
+/* ---------- Accueil ---------- */
+function preparerAccueil() {
+  $("pseudo").value = etat.pseudo || "";
+  const grille = $("grille-equipes");
+  grille.innerHTML = "";
+  EQUIPES.forEach(eq => {
+    const div = document.createElement("div");
+    div.className = "equipe" + (etat.equipe === eq.nom ? " choisie" : "");
+    div.innerHTML = `<span class="drapeau">${eq.drapeau}</span>${eq.nom}`;
+    div.onclick = () => {
+      etat.equipe = eq.nom;
+      sauverEtat();
+      grille.querySelectorAll(".equipe").forEach(x => x.classList.remove("choisie"));
+      div.classList.add("choisie");
+      verifierBoutonJouer();
+    };
+    grille.appendChild(div);
+  });
+  verifierBoutonJouer();
+}
+
+function verifierBoutonJouer() {
+  const pseudo = $("pseudo").value.trim();
+  $("btn-jouer").disabled = !(pseudo && etat.equipe);
+}
+
+$("pseudo").addEventListener("input", () => {
+  etat.pseudo = $("pseudo").value.trim() || null;
+  sauverEtat();
+  verifierBoutonJouer();
+});
+
+$("btn-jouer").onclick = () => {
+  if (!$("pseudo").value.trim() || !etat.equipe) return;
+  commencerDuel();
+};
+$("btn-classement-accueil").onclick = () => { afficherClassement(); montrerEcran("ecran-classement"); };
+$("btn-accueil-resultat").onclick = () => { preparerAccueil(); montrerEcran("ecran-accueil"); };
+$("btn-classement-resultat").onclick = () => { afficherClassement(); montrerEcran("ecran-classement"); };
+$("btn-revanche").onclick = () => commencerDuel();
+$("btn-retour-accueil").onclick = () => { preparerAccueil(); montrerEcran("ecran-accueil"); };
+
+/* ---------- Duel ---------- */
+const duel = { questions: [], index: 0, moi: 0, bot: 0, robotIndex: null, timerBot: null, robotResolu: false, tempsRestant: DUREE_QUESTION, verrouille: false };
+
+let chronoIntervalle = null;
+
+function commencerDuel() {
+  duel.questions = melanger(QUESTIONS).slice(0, NB_QUESTIONS);
+  duel.index = 0;
+  duel.moi = 0;
+  duel.bot = 0;
+  const bot_nom = melanger(["Robot Rachid", "Fantôme Samir", "Robot Karim", "Fantôme Lina", "Robot Youssef"])[0];
+  $("bot-nom").textContent = bot_nom + " 🤖";
+  $("moi-nom").textContent = etat.pseudo;
+  $("moi-score").textContent = "0";
+  $("bot-score").textContent = "0";
+  montrerEcran("ecran-duel");
+  poserQuestion();
+}
+
+function poserQuestion() {
+  const q = duel.questions[duel.index];
+  duel.verrouille = false;
+  duel.robotResolu = false;
+  duel.tempsRestant = DUREE_QUESTION;
+
+  $("duel-progression").textContent = `Question ${duel.index + 1}/${NB_QUESTIONS}`;
+  $("duel-categorie").textContent = q.cat;
+  $("question-texte").textContent = q.q;
+
+  // Le robot choisit sa réponse maintenant : bonne avec ~65 % de chance
+  const bonneChance = 0.65;
+  const robotTrouve = Math.random() < bonneChance;
+  const robotIndex = robotTrouve ? q.b : melanger([0, 1, 2, 3].filter(i => i !== q.b))[0];
+  const robotDelai = 3 + Math.random() * (DUREE_QUESTION - 4); // répond entre 3 et ~11 s
+  duel.robotIndex = robotIndex;
+  duel.timerBot = setTimeout(() => repondreRobot(q), robotDelai * 1000);
+
+  // Affichage des réponses dans un ordre aléatoire
+  const ordre = melanger([0, 1, 2, 3]);
+  const conteneur = $("reponses");
+  conteneur.innerHTML = "";
+  ordre.forEach(indice => {
+    const btn = document.createElement("button");
+    btn.className = "reponse";
+    btn.textContent = q.c[indice];
+    btn.onclick = () => repondreJoueur(indice, q, btn);
+    conteneur.appendChild(btn);
+  });
+
+  // Chrono
+  clearInterval(chronoIntervalle);
+  $("chrono").textContent = DUREE_QUESTION.toFixed(1).replace(".", ",") + " s";
+  $("ruisseau-temps").style.width = "0%";
+  chronoIntervalle = setInterval(() => {
+    duel.tempsRestant -= 0.1;
+    if (duel.tempsRestant <= 0) {
+      duel.tempsRestant = 0;
+      clearInterval(chronoIntervalle);
+      if (!duel.verrouille) {
+        duel.verrouille = true;
+        resoudreRobot(q);
+        revelerBonneReponse(q);
+        notifier("⏰ Trop tard !");
+        setTimeout(questionSuivante, 1500);
+      }
+    }
+    $("chrono").textContent = duel.tempsRestant.toFixed(1).replace(".", ",") + " s";
+    $("ruisseau-temps").style.width = (100 * (1 - duel.tempsRestant / DUREE_QUESTION)) + "%";
+  }, 100);
+}
+
+function repondreJoueur(indice, q, btn) {
+  if (duel.verrouille) return;
+  duel.verrouille = true;
+  const juste = indice === q.b;
+  // Le robot a déjà engagé sa réponse : on la tient pour acquise avant de révéler.
+  resoudreRobot(q);
+  if (juste) {
+    // 100 points + bonus de vitesse jusqu'à 50
+    const bonus = Math.round(50 * (duel.tempsRestant / DUREE_QUESTION));
+    duel.moi += 100 + bonus;
+    notifier(`✅ +${100 + bonus} points`);
+  } else {
+    notifier("❌ Raté !");
+  }
+  revelerBonneReponse(q, btn, juste);
+  $("moi-score").textContent = duel.moi;
+  setTimeout(questionSuivante, 1500);
+}
+
+/* Applique la réponse déjà « engagée » du robot sans révéler quoi que ce soit. */
+function resoudreRobot(q) {
+  if (duel.robotResolu) return;
+  duel.robotResolu = true;
+  clearTimeout(duel.timerBot);
+  duel.timerBot = null;
+  if (duel.robotIndex === q.b) duel.bot += 100;
+  $("bot-score").textContent = duel.bot;
+}
+
+/* Le robot a répondu avant le joueur : on révèle la question. */
+function repondreRobot(q) {
+  if (duel.verrouille) return;
+  duel.verrouille = true;
+  resoudreRobot(q);
+  revelerBonneReponse(q);
+  notifier(duel.robotIndex === q.b ? "🤖 Le robot marque" : "🤖 Le robot se trompe");
+  setTimeout(questionSuivante, 1500);
+}
+
+function questionSuivante() {
+  clearInterval(chronoIntervalle);
+  clearTimeout(duel.timerBot);
+  duel.index++;
+  if (duel.index >= NB_QUESTIONS) { terminerDuel(); return; }
+  poserQuestion();
+}
+
+function revelerBonneReponse(q, btnChoisi, gagne) {
+  clearInterval(chronoIntervalle);
+  document.querySelectorAll(".reponse").forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === q.c[q.b]) btn.classList.add("bonne");
+    else if (btn === btnChoisi) btn.classList.add("mauvaise");
+    else btn.classList.add("masquee");
+  });
+}
+
+/* ---------- Fin de duel ---------- */
+function terminerDuel() {
+  const gagne = duel.moi > duel.bot;
+  const nul = duel.moi === duel.bot;
+  const titre = $("resultat-titre");
+  titre.className = "resultat-titre " + (gagne ? "gagne" : nul ? "egalite" : "perdu");
+  titre.textContent = gagne ? "🎉 Victoire !" : nul ? "🤝 Match nul" : "😔 Défaite";
+  $("resultat-score").textContent = `${etat.pseudo} ${duel.moi} — ${duel.bot} 🤖`;
+  $("resultat-score").className = "resultat-score";
+
+  const pointsEquipe = gagne ? POINTS_VICTOIRE : nul ? POINTS_NUL : POINTS_DEFAITE;
+  const ligne = etat.classement.find(e => e.nom === etat.equipe);
+  if (ligne) ligne.points += pointsEquipe;
+  // Simulation : les autres équipes jouent aussi pendant la semaine
+  etat.classement.forEach(e => { if (e.nom !== etat.equipe) e.points += (gagne && nul ? 0 : Math.round(Math.random() * 90)); });
+  etat.historique.push({ date: new Date().toISOString(), moi: duel.moi, bot: duel.bot, equipe: etat.equipe, points: pointsEquipe });
+  sauverEtat();
+
+  $("points-equipe").textContent = `+${pointsEquipe} points pour ${etat.equipe} 🏟️`;
+  montrerEcran("ecran-resultat");
+}
+
+/* ---------- Classement ---------- */
+function afficherClassement() {
+  const corps = $("classement-corps");
+  corps.innerHTML = "";
+  [...etat.classement]
+    .sort((a, b) => b.points - a.points)
+    .forEach((e, i) => {
+      const tr = document.createElement("tr");
+      if (e.nom === etat.equipe) tr.className = "rang-moi";
+      const eq = EQUIPES.find(x => x.nom === e.nom);
+      tr.innerHTML = `<td>${i + 1}</td><td>${eq ? eq.drapeau : ""} ${e.nom}${e.nom === etat.equipe ? " (toi)" : ""}</td><td class="points">${e.points}</td>`;
+      corps.appendChild(tr);
+    });
+}
+
+/* ---------- Démarrage ---------- */
+preparerAccueil();
+montrerEcran("ecran-accueil");
+</script>
+</body>
+</html>
