@@ -96,8 +96,8 @@
     border: 2px solid var(--craie-20); border-radius: 999px; background: transparent; color: var(--craie);
     font: 700 15px var(--texte); cursor: pointer; transition: background .12s, color .12s, border-color .12s;
   }
-  .theme[aria-pressed="true"] { background: var(--craie); border-color: var(--craie); color: var(--nuit); }
-  .theme[aria-pressed="true"]::before { content: "✓"; font-weight: 900; }
+  .theme[aria-checked="true"] { background: var(--craie); border-color: var(--craie); color: var(--nuit); }
+  .theme[aria-checked="true"]::before { content: "✓"; font-weight: 900; }
   .aide { margin-top: 10px; font-size: 14px; color: var(--craie-80); }
 
   /* ---------- Duel ---------- */
@@ -188,7 +188,7 @@
   .notification.visible { opacity: 1; }
 
   @media (hover: hover) {
-    .theme:hover:not([aria-pressed="true"]) { border-color: var(--craie-55); }
+    .theme:hover:not([aria-checked="true"]) { border-color: var(--craie-55); }
     .reponse:hover:not(:disabled) { background: #fff; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -203,7 +203,7 @@
   <section class="ecran actif" id="ecran-accueil">
     <header class="marque">
       <h1 class="logo" data-fit="120"><span>Quiz</span><span>Me Up</span></h1>
-      <p class="accroche">Dix questions de culture générale, douze secondes chacune. Choisis tes thèmes et bats le robot.</p>
+      <p class="accroche">Dix questions, douze secondes chacune. Choisis un thème, ou mélange tout, et bats le robot.</p>
     </header>
 
     <div class="champ">
@@ -212,8 +212,8 @@
     </div>
 
     <fieldset class="champ">
-      <legend>Tes thèmes</legend>
-      <div class="themes" id="themes" role="group" aria-label="Tes thèmes"></div>
+      <legend>Ton thème</legend>
+      <div class="themes" id="themes" role="radiogroup" aria-label="Ton thème"></div>
       <p class="aide" id="themes-resume"></p>
     </fieldset>
 
@@ -255,7 +255,7 @@
     <div class="ligne gain"><span class="qui">Tes bonnes réponses</span><span class="valeur" id="rm-bonnes">0 sur 10</span></div>
     <div class="resultat-actions">
       <button class="btn" id="btn-revanche">Revanche</button>
-      <button class="btn sombre" id="btn-changer-themes">Changer de thèmes</button>
+      <button class="btn sombre" id="btn-changer-themes">Changer de thème</button>
       <button class="lien" id="btn-scores-resultat">Voir mes scores</button>
     </div>
   </section>
@@ -298,13 +298,12 @@ function chargerEtat() {
     try { ancien = JSON.parse(localStorage.getItem("duel-quiz-foot")); } catch (e) {}
     etat = {
       pseudo: (ancien && ancien.pseudo) || null,
-      genres: GENRES.map(g => g.id),
+      genre: "tout",
       stats: {},
       parties: { jouees: 0, victoires: 0, meilleur: 0 },
     };
   }
-  etat.genres = (etat.genres || []).filter(id => GENRES.some(g => g.id === id));
-  if (!etat.genres.length) etat.genres = GENRES.map(g => g.id);
+  if (etat.genre !== "tout" && !GENRES.some(g => g.id === etat.genre)) etat.genre = "tout";
   return etat;
 }
 let etat = chargerEtat();
@@ -358,31 +357,27 @@ function montrerEcran(nom) {
 }
 
 /* ---------- Accueil ---------- */
+const TOUT = { id: "tout", nom: "Culture générale" }; // mélange tous les thèmes
+
+function questionsDuTheme(id) {
+  return id === "tout" ? QUESTIONS : QUESTIONS.filter(q => q.g === id);
+}
+
 function preparerAccueil() {
   $("pseudo").value = etat.pseudo || "";
   const zone = $("themes");
   zone.innerHTML = "";
-
-  const toutes = etat.genres.length === GENRES.length;
-  zone.appendChild(creerPastille("Tout", toutes, () => {
-    etat.genres = GENRES.map(g => g.id);
-    sauverEtat();
-    preparerAccueil();
-  }));
-  GENRES.forEach(g => {
-    const actif = etat.genres.includes(g.id);
-    zone.appendChild(creerPastille(g.nom, actif, () => {
-      if (actif && etat.genres.length === 1) { notifier("Garde au moins un thème"); return; }
-      etat.genres = actif ? etat.genres.filter(id => id !== g.id) : [...etat.genres, g.id];
+  [TOUT, ...GENRES].forEach(g => {
+    zone.appendChild(creerPastille(g.nom, etat.genre === g.id, () => {
+      etat.genre = g.id;
       sauverEtat();
       preparerAccueil();
     }));
   });
-
-  const nbQuestions = QUESTIONS.filter(q => etat.genres.includes(q.g)).length;
-  $("themes-resume").textContent = toutes
-    ? `Tous les thèmes, ${nbQuestions} questions possibles`
-    : `${etat.genres.length} ${etat.genres.length > 1 ? "thèmes choisis" : "thème choisi"}, ${nbQuestions} questions possibles`;
+  const nb = questionsDuTheme(etat.genre).length;
+  $("themes-resume").textContent = etat.genre === "tout"
+    ? `Les ${GENRES.length} thèmes mélangés, ${nb} questions possibles`
+    : `${nb} questions possibles`;
   verifierBoutonJouer();
 }
 
@@ -390,14 +385,15 @@ function creerPastille(texte, actif, action) {
   const bouton = document.createElement("button");
   bouton.type = "button";
   bouton.className = "theme";
-  bouton.setAttribute("aria-pressed", String(actif));
+  bouton.setAttribute("role", "radio");
+  bouton.setAttribute("aria-checked", String(actif));
   bouton.textContent = texte;
   bouton.onclick = () => { vibrer(15); action(); };
   return bouton;
 }
 
 function verifierBoutonJouer() {
-  $("btn-jouer").disabled = !($("pseudo").value.trim() && etat.genres.length);
+  $("btn-jouer").disabled = !$("pseudo").value.trim();
 }
 
 $("pseudo").addEventListener("input", () => {
@@ -407,7 +403,7 @@ $("pseudo").addEventListener("input", () => {
 });
 
 $("btn-jouer").onclick = () => {
-  if (!$("pseudo").value.trim() || !etat.genres.length) return;
+  if (!$("pseudo").value.trim()) return;
   commencerDuel();
 };
 $("btn-scores-accueil").onclick = () => { afficherScores(); montrerEcran("ecran-scores"); };
@@ -428,7 +424,7 @@ function placerRepere() {
 }
 
 function commencerDuel() {
-  const reserve = QUESTIONS.filter(q => etat.genres.includes(q.g));
+  const reserve = questionsDuTheme(etat.genre);
   duel.questions = melanger(reserve).slice(0, NB_QUESTIONS);
   duel.total = duel.questions.length;
   duel.index = 0;

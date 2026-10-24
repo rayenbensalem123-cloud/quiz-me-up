@@ -1,6 +1,6 @@
 # Quiz Me Up
 
-**Duel quiz de culture générale** pour téléphone : 10 questions, 12 secondes chacune, contre un robot. Tu choisis tes thèmes avant de jouer.
+**Duel quiz de culture générale** pour téléphone : 10 questions, 12 secondes chacune, contre un robot. Tu choisis un thème avant de jouer, ou « Culture générale » pour tout mélanger.
 
 ## Jouer sur téléphone
 
@@ -25,7 +25,7 @@ puis ouvre http://localhost:8000.
 
 ## Règles
 
-- Choisis ton pseudo et un ou plusieurs thèmes (Histoire, Géographie, Sciences, Nature et animaux, Cinéma et séries, Musique, Arts et littérature, Sport, Football, Tunisie et monde arabe, Tech et jeux vidéo)
+- Choisis ton pseudo et un thème, ou « Culture générale » qui les mélange tous (Histoire, Géographie, Sciences, Nature et animaux, Cinéma et séries, Musique, Arts et littérature, Sport, Football, Tunisie et monde arabe, Tech et jeux vidéo)
 - 100 points par bonne réponse, plus un bonus de vitesse jusqu'à 50
 - Le robot répond juste environ 65 % du temps, à un moment aléatoire
 - La page « Mes scores » garde tes duels, tes victoires et ta réussite par thème (localStorage, sur l'appareil)
