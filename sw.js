@@ -1,5 +1,5 @@
 /* Service worker : met le jeu en cache pour qu'il marche sans connexion. */
-const VERSION = "quiz-me-up-v1";
+const VERSION = "quiz-me-up-v2";
 const FICHIERS = [
   "./",
   "./index.html",

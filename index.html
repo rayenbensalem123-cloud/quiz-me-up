@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0e1220">
+<meta name="theme-color" content="#0E5A3B">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,193 +13,287 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Quiz Me Up — Duel Quiz Football</title>
 <style>
+  /* Pelouse tondue, lignes à la craie, carton jaune et rouge : tout vient du terrain. */
   :root {
-    --fond: #0e1220;
-    --carte: #1a2038;
-    --carte2: #222a4a;
-    --accent: #22d3a5;
-    --accent2: #f7b32b;
-    --rouge: #ef5b6c;
-    --texte: #eef1fb;
-    --texte2: #9aa4c4;
-    --border: #2e3760;
+    --pelouse: #0E5A3B;
+    --pelouse-b: #12643F;
+    --nuit: #06261A;
+    --craie: #F3F5EC;
+    --craie-80: rgba(243, 245, 236, .82);
+    --craie-55: rgba(243, 245, 236, .55);
+    --craie-20: rgba(243, 245, 236, .22);
+    --jaune: #FFD21F;
+    --jaune-bas: #B38F00;
+    --rouge: #D92B3A;
+    --titre: "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
+    --texte: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--pelouse); }
   body {
-    font-family: "Segoe UI", system-ui, sans-serif;
-    background: radial-gradient(1200px 600px at 50% -10%, #1c2450 0%, var(--fond) 60%);
-    color: var(--texte);
+    font-family: var(--texte);
+    color: var(--craie);
     min-height: 100vh; min-height: 100dvh;
     display: flex; justify-content: center;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-             max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+             max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
     -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none; user-select: none;
     overscroll-behavior-y: contain;
     touch-action: manipulation;
+    overflow-x: hidden;
   }
-  input[type=text] { -webkit-user-select: text; user-select: text; font-size: 16px; }
-  .btn, .reponse, .equipe { min-height: 48px; }
-  #app { width: 100%; max-width: 480px; }
-  .ecran { display: none; animation: apparait .25s ease; }
+  /* bandes de tonte, fixes derrière le contenu */
+  .pelouse {
+    position: fixed; inset: 0; z-index: -1;
+    background: repeating-linear-gradient(180deg, var(--pelouse) 0 84px, var(--pelouse-b) 84px 168px);
+  }
+  #app { width: 100%; max-width: 480px; position: relative; }
+  .ecran { display: none; animation: apparait .2s ease; }
   .ecran.actif { display: block; }
-  @keyframes apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+  @keyframes apparait { from { opacity: 0; } to { opacity: 1; } }
 
-  .carte { background: var(--carte); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; }
-  h1 { font-size: 1.5rem; text-align: center; margin-bottom: 4px; }
-  h2 { font-size: 1.1rem; margin-bottom: 12px; }
-  .sous-titre { color: var(--texte2); text-align: center; font-size: .9rem; margin-bottom: 18px; }
+  :focus-visible { outline: 3px solid var(--jaune); outline-offset: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  input[type=text] {
-    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--carte2); color: var(--texte); font-size: 1rem; outline: none;
+  /* ---------- Boutons ---------- */
+  .btn {
+    display: block; width: 100%; min-height: 58px; margin-top: 12px;
+    border: 0; border-bottom: 5px solid var(--jaune-bas); border-radius: 12px;
+    background: var(--jaune); color: var(--nuit);
+    font: 800 26px/1 var(--titre); letter-spacing: .02em; cursor: pointer;
+    transition: transform .08s, border-bottom-width .08s;
   }
-  input[type=text]:focus { border-color: var(--accent); }
+  .btn:not(:disabled):active { transform: translateY(3px); border-bottom-width: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.sombre { background: var(--nuit); color: var(--craie); border-bottom-color: #000; }
+  .lien {
+    display: block; margin: 18px auto 0; padding: 10px 14px; border: 0; background: none;
+    color: var(--craie); font: 600 16px var(--texte); text-decoration: underline; text-underline-offset: 4px; cursor: pointer;
+  }
+
+  /* ---------- Accueil ---------- */
+  .marque { position: relative; padding: 18px 0 26px; }
+  .marque::before { /* ligne médiane */
+    content: ""; position: absolute; left: -18px; right: -18px; top: 138px; border-top: 3px solid var(--craie-20);
+  }
+  .marque::after { /* rond central */
+    content: ""; position: absolute; right: -70px; top: 38px; width: 200px; height: 200px;
+    border: 3px solid var(--craie-20); border-radius: 50%;
+  }
+  .logo {
+    position: relative; z-index: 1;
+    font: 900 clamp(56px, 19vw, 96px)/.84 var(--titre); text-transform: uppercase; letter-spacing: -.01em;
+  }
+  .logo span { display: block; white-space: nowrap; }
+  .accroche { position: relative; z-index: 1; margin-top: 18px; max-width: 30ch; font-size: 17px; line-height: 1.4; color: var(--craie-80); }
+
+  .champ { border: 0; margin-top: 22px; }
+  .champ label, .champ legend { display: block; margin-bottom: 4px; padding: 0; font: 700 15px var(--texte); color: var(--craie-80); }
+  input[type=text] {
+    width: 100%; padding: 6px 0 8px; border: 0; border-bottom: 3px solid var(--craie); border-radius: 0;
+    background: transparent; color: var(--craie); font: 800 36px/1.1 var(--titre); outline: none;
+    -webkit-user-select: text; user-select: text; -webkit-appearance: none; appearance: none;
+  }
+  input[type=text]::placeholder { color: var(--craie-55); }
+  input[type=text]:focus { border-bottom-color: var(--jaune); }
 
   .grille-equipes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
   .equipe {
-    background: var(--carte2); border: 2px solid var(--border); border-radius: 12px;
-    padding: 10px 4px; text-align: center; cursor: pointer; font-size: .8rem; color: var(--texte2);
-    transition: all .15s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    min-height: 76px; padding: 8px 2px; border: 2px solid var(--craie-20); border-radius: 10px;
+    background: transparent; color: var(--craie); font: 700 12.5px var(--texte); cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
   }
-  .equipe .drapeau { font-size: 1.6rem; display: block; margin-bottom: 4px; }
-  .equipe:hover { border-color: var(--accent2); }
-  .equipe.choisie { border-color: var(--accent); color: var(--texte); background: #1c3a33; }
+  .equipe .drapeau { font-size: 28px; line-height: 1; }
+  .equipe[aria-checked="true"] { background: var(--craie); border-color: var(--craie); color: var(--nuit); }
 
-  .btn {
-    display: block; width: 100%; padding: 14px; margin-top: 14px; border: none; border-radius: 12px;
-    background: var(--accent); color: #062b22; font-size: 1.05rem; font-weight: 700; cursor: pointer;
-    transition: transform .1s, opacity .15s;
+  /* ---------- Duel ---------- */
+  .entete { display: flex; justify-content: space-between; align-items: baseline; color: var(--craie-80); font: 700 15px var(--texte); }
+  .chrono { font: 800 36px/1 var(--titre); font-variant-numeric: tabular-nums; color: var(--craie); }
+  .chrono::after { content: " s"; font-size: 18px; color: var(--craie-80); }
+  .temps { height: 6px; margin: 8px 0 20px; border-radius: 3px; background: var(--craie-20); overflow: hidden; }
+  #ruisseau-temps { height: 100%; width: 100%; background: var(--craie); transition: width .1s linear; }
+  .urgent .chrono { color: var(--jaune); }
+  .urgent #ruisseau-temps { background: var(--jaune); }
+
+  .tableau { display: flex; justify-content: space-between; gap: 12px; }
+  .cote { display: flex; flex-direction: column; min-width: 0; max-width: 50%; }
+  .cote.droite { align-items: flex-end; text-align: right; }
+  .identite { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .cote.droite .identite { flex-direction: row-reverse; }
+  .badge { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--craie-20); font-size: 17px; }
+  .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 15px var(--texte); }
+  .score { margin-top: 4px; font: 900 76px/.9 var(--titre); font-variant-numeric: tabular-nums; }
+
+  .terrain { position: relative; height: 58px; margin: 16px 0 20px; border: 2px solid var(--craie-55); border-radius: 6px; }
+  .terrain::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 2px solid var(--craie-55); }
+  .rond { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; transform: translate(-50%, -50%); border: 2px solid var(--craie-55); border-radius: 50%; }
+  .surface { position: absolute; top: 11px; bottom: 11px; width: 22px; border: 2px solid var(--craie-55); }
+  .surface.g { left: -2px; border-left: 0; }
+  .surface.d { right: -2px; border-right: 0; }
+  .ballon {
+    position: absolute; top: 50%; left: 50%; font-size: 28px; line-height: 1;
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+    transition: left .6s cubic-bezier(.2, .8, .2, 1), transform .6s cubic-bezier(.2, .8, .2, 1);
   }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .btn:not(:disabled):active { transform: scale(.98); }
-  .btn.secondaire { background: var(--carte2); color: var(--texte); border: 1px solid var(--border); }
-  .btn.terre { background: var(--accent2); color: #3d2a00; }
+  .ballon.coup-envoi { animation: coup-envoi .7s cubic-bezier(.3, .9, .4, 1) both; }
+  @keyframes coup-envoi {
+    from { transform: translate(-50%, -330%) rotate(-200deg) scale(1.5); opacity: 0; }
+    60%  { opacity: 1; }
+    to   { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 1; }
+  }
 
-  .barre-haut { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; color: var(--texte2); font-size: .9rem; }
-  .chrono { font-weight: 700; color: var(--accent2); font-variant-numeric: tabular-nums; }
-
-  .duel-joueurs { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .joueur { flex: 1; text-align: center; }
-  .joueur .avatar { font-size: 1.8rem; }
-  .joueur .nom { font-size: .85rem; color: var(--texte2); }
-  .joueur.points-actif .nom { color: var(--accent); }
-  .vs { color: var(--texte2); font-weight: 700; }
-  .score { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-
-  .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; min-height: 60px; }
+  .categorie { margin-bottom: 6px; font: 700 14px var(--texte); color: var(--craie-80); }
+  .question { min-height: 96px; margin-bottom: 16px; font: 800 25px/1.22 var(--texte); letter-spacing: -.01em; }
 
   .reponse {
-    display: block; width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 9px;
-    background: var(--carte2); color: var(--texte); border: 2px solid var(--border); border-radius: 12px;
-    font-size: .95rem; cursor: pointer; transition: all .15s;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    width: 100%; min-height: 58px; margin-bottom: 10px; padding: 12px 16px;
+    border: 0; border-radius: 10px; background: var(--craie); color: var(--nuit);
+    font: 700 17px/1.2 var(--texte); text-align: left; cursor: pointer;
+    transition: transform .08s, opacity .2s;
   }
-  .reponse:hover:not(:disabled) { border-color: var(--accent2); }
-  .reponse:disabled { cursor: default; opacity: .85; }
-  .reponse.bonne { border-color: var(--accent); background: #14352b; }
-  .reponse.mauvaise { border-color: var(--rouge); background: #3a1d26; }
-  .reponse.masquee { opacity: .45; }
+  .reponse:not(:disabled):active { transform: scale(.985); }
+  .reponse:disabled { cursor: default; }
+  .reponse.bonne { background: var(--jaune); }
+  .reponse.bonne::after { content: "✓"; font-weight: 900; font-size: 20px; }
+  .reponse.mauvaise { background: var(--rouge); color: #fff; }
+  .reponse.mauvaise::after { content: "✕"; font-weight: 900; font-size: 18px; }
+  .reponse.masquee { opacity: .38; }
 
-  .ruisseau { height: 6px; background: var(--border); border-radius: 3px; margin: 6px 0 16px; overflow: hidden; }
-  .ruisseau > div { height: 100%; background: var(--accent2); width: 0%; transition: width .3s linear; }
+  /* ---------- Résultat ---------- */
+  .verdict {
+    margin: 44px 0 22px; font: 900 clamp(48px, 14vw, 76px)/.86 var(--titre); text-transform: uppercase; letter-spacing: -.01em; white-space: nowrap;
+  }
+  .verdict.gagne { color: var(--jaune); }
+  .verdict.perdu::after { /* le carton rouge */
+    content: ""; display: inline-block; width: .2em; height: .3em; margin-left: .14em;
+    background: var(--rouge); border-radius: 4px; transform: rotate(9deg);
+  }
+  .ligne { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 0; border-top: 2px solid var(--craie-20); }
+  .ligne:last-of-type { border-bottom: 2px solid var(--craie-20); }
+  .ligne .qui { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 18px var(--texte); }
+  .ligne .valeur { font: 900 40px/1 var(--titre); font-variant-numeric: tabular-nums; }
+  .ligne.gain .valeur { color: var(--jaune); }
+  .resultat-actions { margin-top: 18px; }
 
-  .resultat-titre { text-align: center; font-size: 1.6rem; font-weight: 800; margin: 10px 0 4px; }
-  .gagne { color: var(--accent); }
-  .perdu { color: var(--rouge); }
-  .egalite { color: var(--accent2); }
-  .resultat-score { text-align: center; font-size: 1.2rem; margin-bottom: 12px; }
-  .points-equipe { text-align: center; color: var(--texte2); font-size: .9rem; margin-bottom: 6px; }
-
-  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-  th, td { padding: 9px 8px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { color: var(--texte2); font-weight: 600; font-size: .8rem; }
-  .rang-moi { color: var(--accent); font-weight: 700; }
-  td.points { text-align: right; font-variant-numeric: tabular-nums; }
-
-  .badge { display: inline-block; background: var(--carte2); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: .75rem; color: var(--texte2); }
-  .note { color: var(--texte2); font-size: .8rem; }
+  /* ---------- Classement ---------- */
+  .titre-page { margin: 12px 0 8px; font: 900 clamp(40px, 12vw, 60px)/.88 var(--titre); text-transform: uppercase; }
+  .titre-page span { display: block; white-space: nowrap; }
+  .chapeau { max-width: 36ch; margin-bottom: 18px; font-size: 15px; line-height: 1.4; color: var(--craie-80); }
+  table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+  td { height: 58px; padding: 0 10px; border-top: 1px solid var(--craie-20); vertical-align: middle; }
+  tr:first-child td { border-top: 0; }
+  td.rang { width: 40px; font: 800 30px var(--titre); font-variant-numeric: tabular-nums; }
+  tr:first-child td.rang { color: var(--jaune); }
+  td.equipe-nom { font: 700 17px var(--texte); }
+  td.equipe-nom .drapeau { margin-right: 8px; font-size: 24px; vertical-align: -3px; }
+  td.points { text-align: right; font: 800 30px var(--titre); font-variant-numeric: tabular-nums; }
+  tr.rang-moi td { background: var(--craie); color: var(--nuit); border-top-color: transparent; }
+  tr.rang-moi td:first-child { border-radius: 10px 0 0 10px; }
+  tr.rang-moi td:last-child { border-radius: 0 10px 10px 0; }
+  tr.rang-moi td.rang { color: var(--nuit); }
+  .note { margin-top: 16px; font-size: 13px; line-height: 1.4; color: var(--craie-80); }
 
   .notification {
-    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
-    background: var(--carte2); border: 1px solid var(--accent); color: var(--texte);
-    padding: 10px 18px; border-radius: 999px; font-size: .9rem;
-    opacity: 0; pointer-events: none; transition: opacity .25s;
+    position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    padding: 11px 20px; border-radius: 999px; background: var(--craie); color: var(--nuit);
+    font: 800 16px var(--texte); white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
   }
   .notification.visible { opacity: 1; }
+
+  @media (hover: hover) {
+    .equipe:hover:not([aria-checked="true"]) { border-color: var(--craie-55); }
+    .reponse:hover:not(:disabled) { background: #fff; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
+<div class="pelouse" aria-hidden="true"></div>
 <div id="app">
 
   <!-- ÉCRAN ACCUEIL -->
-  <div class="ecran actif" id="ecran-accueil">
-    <div class="carte">
-      <h1>⚽ Duel Quiz Football</h1>
-      <p class="sous-titre">10 questions · 12 secondes chacune · ta victoire fait grimper ton équipe au classement hebdomadaire</p>
-      <input type="text" id="pseudo" placeholder="Ton pseudo" maxlength="14" autocomplete="off">
-      <h2 style="margin-top:18px">Choisis ton équipe</h2>
-      <div class="grille-equipes" id="grille-equipes"></div>
-      <button class="btn" id="btn-jouer" disabled>Jouer le duel</button>
-      <button class="btn secondaire" id="btn-classement-accueil">Voir le classement des équipes</button>
-      <p class="note" style="margin-top:12px">Prototype : ton adversaire est un « robot » (comme un fantôme jouant une vraie partie), le but étant de tester le concept sans attendre d'autres joueurs connectés.</p>
+  <section class="ecran actif" id="ecran-accueil">
+    <header class="marque">
+      <h1 class="logo" data-fit="120"><span>Quiz</span><span>Me Up</span></h1>
+      <p class="accroche">Dix questions de football, douze secondes chacune. Gagne le duel pour faire monter ton équipe au classement.</p>
+    </header>
+
+    <div class="champ">
+      <label for="pseudo">Ton pseudo</label>
+      <input type="text" id="pseudo" placeholder="Karim" maxlength="14" autocomplete="off" autocapitalize="words" spellcheck="false">
     </div>
-  </div>
+
+    <fieldset class="champ">
+      <legend>Ton équipe</legend>
+      <div class="grille-equipes" id="grille-equipes" role="radiogroup" aria-label="Ton équipe"></div>
+    </fieldset>
+
+    <button class="btn" id="btn-jouer" disabled>Lancer le duel</button>
+    <button class="lien" id="btn-classement-accueil">Voir le classement</button>
+  </section>
 
   <!-- ÉCRAN DUEL -->
-  <div class="ecran" id="ecran-duel">
-    <div class="carte">
-      <div class="barre-haut">
-        <span id="duel-progression">Question 1/10</span>
-        <span class="chrono" id="chrono">12,0 s</span>
-      </div>
-      <div class="duel-joueurs">
-        <div class="joueur" id="joueur-moi">
-          <div class="avatar">🧑</div>
-          <div class="nom" id="moi-nom">—</div>
-          <div class="score" id="moi-score">0</div>
-        </div>
-        <div class="vs">VS</div>
-        <div class="joueur" id="joueur-bot">
-          <div class="avatar">🤖</div>
-          <div class="nom" id="bot-nom">Robot</div>
-          <div class="score" id="bot-score">0</div>
-        </div>
-      </div>
-      <div class="question" id="question-texte"></div>
-      <div id="reponses"></div>
-      <div class="ruisseau"><div id="ruisseau-temps"></div></div>
-      <div class="badge" id="duel-categorie">Général</div>
+  <section class="ecran" id="ecran-duel">
+    <div class="entete">
+      <span id="duel-progression">Question 1 sur 10</span>
+      <span class="chrono" id="chrono">12,0</span>
     </div>
-  </div>
+    <div class="temps"><div id="ruisseau-temps"></div></div>
+
+    <div class="tableau">
+      <div class="cote" id="joueur-moi">
+        <div class="identite"><span class="badge" id="moi-drapeau">⚽</span><span class="nom" id="moi-nom">—</span></div>
+        <div class="score" id="moi-score">0</div>
+      </div>
+      <div class="cote droite" id="joueur-bot">
+        <div class="identite"><span class="badge">🤖</span><span class="nom" id="bot-nom">Robot</span></div>
+        <div class="score" id="bot-score">0</div>
+      </div>
+    </div>
+
+    <div class="terrain" aria-hidden="true">
+      <span class="surface g"></span><span class="rond"></span><span class="surface d"></span>
+      <span class="ballon" id="ballon">⚽</span>
+    </div>
+
+    <p class="categorie" id="duel-categorie">Général</p>
+    <h2 class="question" id="question-texte"></h2>
+    <div id="reponses"></div>
+  </section>
 
   <!-- ÉCRAN RÉSULTAT -->
-  <div class="ecran" id="ecran-resultat">
-    <div class="carte">
-      <p class="resultat-titre" id="resultat-titre">—</p>
-      <p class="resultat-score" id="resultat-score">—</p>
-      <p class="points-equipe" id="points-equipe">—</p>
-      <button class="btn terre" id="btn-revanche">Revanche ⚡</button>
-      <button class="btn secondaire" id="btn-classement-resultat">Classement des équipes</button>
-      <button class="btn secondaire" id="btn-accueil-resultat">Retour à l'accueil</button>
+  <section class="ecran" id="ecran-resultat">
+    <p class="verdict" id="resultat-titre" data-fit="120">—</p>
+    <div class="ligne"><span class="qui" id="rm-nom">—</span><span class="valeur" id="rm-pts">0</span></div>
+    <div class="ligne"><span class="qui" id="rb-nom">—</span><span class="valeur" id="rb-pts">0</span></div>
+    <div class="ligne gain"><span class="qui" id="gain-label">—</span><span class="valeur" id="gain-pts">+0</span></div>
+    <div class="resultat-actions">
+      <button class="btn" id="btn-revanche">Revanche</button>
+      <button class="btn sombre" id="btn-classement-resultat">Classement des équipes</button>
+      <button class="lien" id="btn-accueil-resultat">Retour à l'accueil</button>
     </div>
-  </div>
+  </section>
 
   <!-- ÉCRAN CLASSEMENT -->
-  <div class="ecran" id="ecran-classement">
-    <div class="carte">
-      <h2>🏆 Classement hebdomadaire des équipes</h2>
-      <p class="note" style="margin-bottom:12px">Chaque victoire rapporte 150 points à ton équipe, un match nul en rapporte 60. Les autres équipes progressent aussi ( simulation ).</p>
-      <table>
-        <thead><tr><th>#</th><th>Équipe</th><th style="text-align:right">Points</th></tr></thead>
-        <tbody id="classement-corps"></tbody>
-      </table>
-      <button class="btn secondaire" id="btn-retour-accueil">Retour</button>
-      <p class="note" style="margin-top:10px">Le classement réel serait calculé côté serveur pour empêcher la triche — ici tout reste sur ton téléphone, c'est un prototype.</p>
-    </div>
-  </div>
+  <section class="ecran" id="ecran-classement">
+    <h2 class="titre-page" data-fit="76"><span>Classement</span><span>de la semaine</span></h2>
+    <p class="chapeau">Une victoire rapporte 150 points à ton équipe, un nul 60, une défaite 20. Les autres équipes progressent aussi.</p>
+    <table>
+      <thead class="sr-only"><tr><th>Rang</th><th>Équipe</th><th>Points</th></tr></thead>
+      <tbody id="classement-corps"></tbody>
+    </table>
+    <button class="btn sombre" id="btn-retour-accueil">Retour</button>
+    <p class="note">Ce classement reste sur ton téléphone. Pour le partager entre joueurs, il faudra un serveur.</p>
+  </section>
 
 </div>
-<div class="notification" id="notification"></div>
+<div class="notification" id="notification" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
@@ -253,7 +347,7 @@ function chargerEtat() {
   return etat;
 }
 let etat = chargerEtat();
-function sauverEtat() { localStorage.setItem("duel-quiz-foot", JSON.stringify(etat)); }
+function sauverEtat() { try { localStorage.setItem("duel-quiz-foot", JSON.stringify(etat)); } catch (e) {} }
 
 /* ---------- Outils ---------- */
 const $ = id => document.getElementById(id);
@@ -265,6 +359,7 @@ const melanger = tableau => {
   }
   return t;
 };
+const drapeauDe = nom => (EQUIPES.find(x => x.nom === nom) || {}).drapeau || "⚽";
 
 let notifMinuteur = null;
 function notifier(texte) {
@@ -272,16 +367,33 @@ function notifier(texte) {
   n.textContent = texte;
   n.classList.add("visible");
   clearTimeout(notifMinuteur);
-  notifMinuteur = setTimeout(() => n.classList.remove("visible"), 1800);
+  notifMinuteur = setTimeout(() => n.classList.remove("visible"), 1500);
 }
 
 function vibrer(motif) {
   try { if (navigator.vibrate) navigator.vibrate(motif); } catch (e) {}
 }
 
+/* Agrandit les gros titres au maximum de la largeur disponible, quelle que soit la police du téléphone. */
+function ajusterTitres() {
+  document.querySelectorAll("[data-fit]").forEach(el => {
+    if (!el.offsetParent) return;
+    let taille = Number(el.dataset.fit);
+    el.style.fontSize = taille + "px";
+    while (el.scrollWidth > el.clientWidth + 1 && taille > 30) {
+      taille -= 2;
+      el.style.fontSize = taille + "px";
+    }
+  });
+}
+window.addEventListener("resize", ajusterTitres);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajusterTitres);
+
 function montrerEcran(nom) {
   document.querySelectorAll(".ecran").forEach(e => e.classList.remove("actif"));
   $(nom).classList.add("actif");
+  window.scrollTo(0, 0);
+  ajusterTitres();
 }
 
 /* ---------- Accueil ---------- */
@@ -290,17 +402,21 @@ function preparerAccueil() {
   const grille = $("grille-equipes");
   grille.innerHTML = "";
   EQUIPES.forEach(eq => {
-    const div = document.createElement("div");
-    div.className = "equipe" + (etat.equipe === eq.nom ? " choisie" : "");
-    div.innerHTML = `<span class="drapeau">${eq.drapeau}</span>${eq.nom}`;
-    div.onclick = () => {
+    const bouton = document.createElement("button");
+    bouton.type = "button";
+    bouton.className = "equipe";
+    bouton.setAttribute("role", "radio");
+    bouton.setAttribute("aria-checked", String(etat.equipe === eq.nom));
+    bouton.innerHTML = `<span class="drapeau">${eq.drapeau}</span>${eq.nom}`;
+    bouton.onclick = () => {
       etat.equipe = eq.nom;
       sauverEtat();
-      grille.querySelectorAll(".equipe").forEach(x => x.classList.remove("choisie"));
-      div.classList.add("choisie");
+      grille.querySelectorAll(".equipe").forEach(x => x.setAttribute("aria-checked", "false"));
+      bouton.setAttribute("aria-checked", "true");
+      vibrer(15);
       verifierBoutonJouer();
     };
-    grille.appendChild(div);
+    grille.appendChild(bouton);
   });
   verifierBoutonJouer();
 }
@@ -327,21 +443,36 @@ $("btn-revanche").onclick = () => commencerDuel();
 $("btn-retour-accueil").onclick = () => { preparerAccueil(); montrerEcran("ecran-accueil"); };
 
 /* ---------- Duel ---------- */
-const duel = { questions: [], index: 0, moi: 0, bot: 0, robotIndex: null, timerBot: null, robotResolu: false, tempsRestant: DUREE_QUESTION, verrouille: false };
+const duel = { questions: [], index: 0, moi: 0, bot: 0, botNom: "Robot", robotIndex: null, timerBot: null, robotResolu: false, tempsRestant: DUREE_QUESTION, verrouille: false };
 
 let chronoIntervalle = null;
+
+/* Le ballon glisse vers le but de celui qui mène. */
+function placerBallon() {
+  const ecart = duel.moi - duel.bot;
+  const position = 50 + 40 * Math.tanh(ecart / 350);
+  const ballon = $("ballon");
+  ballon.style.left = position + "%";
+  ballon.style.setProperty("--rot", Math.round((position - 50) * 9) + "deg");
+}
 
 function commencerDuel() {
   duel.questions = melanger(QUESTIONS).slice(0, NB_QUESTIONS);
   duel.index = 0;
   duel.moi = 0;
   duel.bot = 0;
-  const bot_nom = melanger(["Robot Rachid", "Fantôme Samir", "Robot Karim", "Fantôme Lina", "Robot Youssef"])[0];
-  $("bot-nom").textContent = bot_nom;
+  duel.botNom = melanger(["Robot Rachid", "Fantôme Samir", "Robot Karim", "Fantôme Lina", "Robot Youssef"])[0];
+  $("bot-nom").textContent = duel.botNom;
   $("moi-nom").textContent = etat.pseudo;
+  $("moi-drapeau").textContent = drapeauDe(etat.equipe);
   $("moi-score").textContent = "0";
   $("bot-score").textContent = "0";
   montrerEcran("ecran-duel");
+  const ballon = $("ballon");
+  ballon.classList.remove("coup-envoi");
+  placerBallon();
+  void ballon.offsetWidth; // relance l'animation du coup d'envoi
+  ballon.classList.add("coup-envoi");
   poserQuestion();
 }
 
@@ -350,8 +481,9 @@ function poserQuestion() {
   duel.verrouille = false;
   duel.robotResolu = false;
   duel.tempsRestant = DUREE_QUESTION;
+  $("ecran-duel").classList.remove("urgent");
 
-  $("duel-progression").textContent = `Question ${duel.index + 1}/${NB_QUESTIONS}`;
+  $("duel-progression").textContent = `Question ${duel.index + 1} sur ${NB_QUESTIONS}`;
   $("duel-categorie").textContent = q.cat;
   $("question-texte").textContent = q.q;
 
@@ -361,6 +493,7 @@ function poserQuestion() {
   const robotIndex = robotTrouve ? q.b : melanger([0, 1, 2, 3].filter(i => i !== q.b))[0];
   const robotDelai = 3 + Math.random() * (DUREE_QUESTION - 4); // répond entre 3 et ~11 s
   duel.robotIndex = robotIndex;
+  clearTimeout(duel.timerBot);
   duel.timerBot = setTimeout(() => repondreRobot(q), robotDelai * 1000);
 
   // Affichage des réponses dans un ordre aléatoire
@@ -369,6 +502,7 @@ function poserQuestion() {
   conteneur.innerHTML = "";
   ordre.forEach(indice => {
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "reponse";
     btn.textContent = q.c[indice];
     btn.onclick = () => repondreJoueur(indice, q, btn);
@@ -377,8 +511,8 @@ function poserQuestion() {
 
   // Chrono
   clearInterval(chronoIntervalle);
-  $("chrono").textContent = DUREE_QUESTION.toFixed(1).replace(".", ",") + " s";
-  $("ruisseau-temps").style.width = "0%";
+  $("chrono").textContent = DUREE_QUESTION.toFixed(1).replace(".", ",");
+  $("ruisseau-temps").style.width = "100%";
   chronoIntervalle = setInterval(() => {
     duel.tempsRestant -= 0.1;
     if (duel.tempsRestant <= 0) {
@@ -388,12 +522,14 @@ function poserQuestion() {
         duel.verrouille = true;
         resoudreRobot(q);
         revelerBonneReponse(q);
-        notifier("⏰ Trop tard !");
+        notifier("Trop tard");
+        vibrer([60, 40, 60]);
         setTimeout(questionSuivante, 1500);
       }
     }
-    $("chrono").textContent = duel.tempsRestant.toFixed(1).replace(".", ",") + " s";
-    $("ruisseau-temps").style.width = (100 * (1 - duel.tempsRestant / DUREE_QUESTION)) + "%";
+    if (duel.tempsRestant <= 3) $("ecran-duel").classList.add("urgent");
+    $("chrono").textContent = duel.tempsRestant.toFixed(1).replace(".", ",");
+    $("ruisseau-temps").style.width = (100 * duel.tempsRestant / DUREE_QUESTION) + "%";
   }, 100);
 }
 
@@ -408,12 +544,13 @@ function repondreJoueur(indice, q, btn) {
     // 100 points + bonus de vitesse jusqu'à 50
     const bonus = Math.round(50 * (duel.tempsRestant / DUREE_QUESTION));
     duel.moi += 100 + bonus;
-    notifier(`✅ +${100 + bonus} points`);
+    notifier(`+${100 + bonus} points`);
   } else {
-    notifier("❌ Raté !");
+    notifier("Raté");
   }
   revelerBonneReponse(q, btn, juste);
   $("moi-score").textContent = duel.moi;
+  placerBallon();
   setTimeout(questionSuivante, 1500);
 }
 
@@ -425,6 +562,7 @@ function resoudreRobot(q) {
   duel.timerBot = null;
   if (duel.robotIndex === q.b) duel.bot += 100;
   $("bot-score").textContent = duel.bot;
+  placerBallon();
 }
 
 /* Le robot a répondu avant le joueur : on révèle la question. */
@@ -433,7 +571,7 @@ function repondreRobot(q) {
   duel.verrouille = true;
   resoudreRobot(q);
   revelerBonneReponse(q);
-  notifier(duel.robotIndex === q.b ? "🤖 Le robot marque" : "🤖 Le robot se trompe");
+  notifier(duel.robotIndex === q.b ? "Le robot marque" : "Le robot se trompe");
   setTimeout(questionSuivante, 1500);
 }
 
@@ -460,10 +598,12 @@ function terminerDuel() {
   const gagne = duel.moi > duel.bot;
   const nul = duel.moi === duel.bot;
   const titre = $("resultat-titre");
-  titre.className = "resultat-titre " + (gagne ? "gagne" : nul ? "egalite" : "perdu");
-  titre.textContent = gagne ? "🎉 Victoire !" : nul ? "🤝 Match nul" : "😔 Défaite";
-  $("resultat-score").textContent = `${etat.pseudo} ${duel.moi} — ${duel.bot} 🤖`;
-  $("resultat-score").className = "resultat-score";
+  titre.className = "verdict " + (gagne ? "gagne" : nul ? "egalite" : "perdu");
+  titre.textContent = gagne ? "Victoire" : nul ? "Match nul" : "Défaite";
+  $("rm-nom").textContent = etat.pseudo;
+  $("rm-pts").textContent = duel.moi;
+  $("rb-nom").textContent = duel.botNom;
+  $("rb-pts").textContent = duel.bot;
 
   const pointsEquipe = gagne ? POINTS_VICTOIRE : nul ? POINTS_NUL : POINTS_DEFAITE;
   const ligne = etat.classement.find(e => e.nom === etat.equipe);
@@ -473,7 +613,9 @@ function terminerDuel() {
   etat.historique.push({ date: new Date().toISOString(), moi: duel.moi, bot: duel.bot, equipe: etat.equipe, points: pointsEquipe });
   sauverEtat();
 
-  $("points-equipe").textContent = `+${pointsEquipe} points pour ${etat.equipe} 🏟️`;
+  $("gain-label").textContent = `Points pour ${etat.equipe}`;
+  $("gain-pts").textContent = `+${pointsEquipe}`;
+  vibrer(gagne ? [40, 60, 40, 60, 120] : 80);
   montrerEcran("ecran-resultat");
 }
 
@@ -486,8 +628,7 @@ function afficherClassement() {
     .forEach((e, i) => {
       const tr = document.createElement("tr");
       if (e.nom === etat.equipe) tr.className = "rang-moi";
-      const eq = EQUIPES.find(x => x.nom === e.nom);
-      tr.innerHTML = `<td>${i + 1}</td><td>${eq ? eq.drapeau : ""} ${e.nom}${e.nom === etat.equipe ? " (toi)" : ""}</td><td class="points">${e.points}</td>`;
+      tr.innerHTML = `<td class="rang">${i + 1}</td><td class="equipe-nom"><span class="drapeau">${drapeauDe(e.nom)}</span>${e.nom}</td><td class="points">${e.points}</td>`;
       corps.appendChild(tr);
     });
 }
