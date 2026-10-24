@@ -1,7 +1,7 @@
 {
-  "name": "Quiz Me Up — Duel Quiz Football",
+  "name": "Quiz Me Up",
   "short_name": "Quiz Me Up",
-  "description": "Duel quiz football en temps réel avec classement d'équipes",
+  "description": "Duel quiz de culture générale contre un robot, avec les thèmes de ton choix",
   "lang": "fr",
   "start_url": "./index.html",
   "scope": "./",

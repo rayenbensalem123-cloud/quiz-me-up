@@ -1,8 +1,6 @@
 # Quiz Me Up
 
-**Duel quiz football** pour téléphone : tu affrontes un robot sur 10 questions de 12 secondes, et chaque victoire fait grimper ton équipe au classement hebdomadaire.
-
-Basé sur le document « Jeux mobiles compétitifs et sociaux : idées et plan » — duel quiz (idée 1) + équipe contre équipe (idée 3).
+**Duel quiz de culture générale** pour téléphone : 10 questions, 12 secondes chacune, contre un robot. Tu choisis tes thèmes avant de jouer.
 
 ## Jouer sur téléphone
 
@@ -17,7 +15,7 @@ Adresse (après activation de GitHub Pages) : `https://rayenbensalem123-cloud.gi
 
 ## Jouer sur ordinateur
 
-Sers le dossier avec n'importe quel serveur statique (le mode hors-ligne exige http/https, pas `file://`) :
+Sers le dossier avec un serveur statique (le mode hors-ligne exige http/https, pas `file://`) :
 
 ```
 python3 -m http.server 8000
@@ -27,28 +25,35 @@ puis ouvre http://localhost:8000.
 
 ## Règles
 
-- Choisis ton pseudo et ton équipe (8 drapeaux)
-- 10 questions de football, 12 secondes chacune
-- 100 points par bonne réponse + bonus de vitesse jusqu'à 50
-- Victoire = +150 points pour ton équipe, nul = +60, défaite = +20
-- Pseudo, équipe et classement sont mémorisés sur l'appareil (localStorage)
+- Choisis ton pseudo et un ou plusieurs thèmes (Histoire, Géographie, Sciences, Nature et animaux, Cinéma et séries, Musique, Arts et littérature, Sport, Football, Tunisie et monde arabe, Tech et jeux vidéo)
+- 100 points par bonne réponse, plus un bonus de vitesse jusqu'à 50
+- Le robot répond juste environ 65 % du temps, à un moment aléatoire
+- La page « Mes scores » garde tes duels, tes victoires et ta réussite par thème (localStorage, sur l'appareil)
 
-## Pourquoi un robot
+## Ajouter des questions
 
-Résoudre le problème du « salon vide » : un duel avec peu de joueurs connectés paraît mort. L'adversaire est un robot qui répond juste ~65 % du temps, à un instant aléatoire.
+Tout est dans `questions.js`. Une question tient sur une ligne, la bonne réponse en premier (le jeu mélange l'ordre) :
+
+```js
+Q("histoire", "Qui fut le premier empereur romain ?", "Auguste", "Jules César", "Néron", "Trajan");
+```
+
+Pour créer un thème, ajoute-le à la liste `GENRES` en haut du fichier.
 
 ## Fichiers
 
-- `index.html` : tout le jeu (HTML, CSS, JS)
+- `index.html` : le jeu (HTML, CSS, JS)
+- `questions.js` : thèmes et questions
 - `manifest.webmanifest`, `sw.js`, `icons/` : installation et hors-ligne
 
 ## Prochaines étapes possibles
 
-- Vrais duels en ligne et classement côté serveur (Firebase/Supabase) pour l'anti-triche
+- Vrais duels en ligne et classement côté serveur (Firebase ou Supabase)
+- Équipes et classement par équipe
 - Salons privés entre amis par code
-- Plus de questions, catégories, cosmétiques
+- Plus de questions par thème, niveaux de difficulté
 - Publication sur les stores via Capacitor
 
 ## Licence
 
-Utilisation libre — démo de concept.
+Utilisation libre, démo de concept.
